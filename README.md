@@ -12,3 +12,6 @@ print ('c%'[::(([]>[[]])-([]<=[{}]))])*(((([]<=[{}])+([]<=[{}]))*(([]<=[{}])+([]
 $ python hello.py
 Hello
 ```
+
+### TODO
+- Reduce an output using variable
