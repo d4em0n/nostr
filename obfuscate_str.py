@@ -142,8 +142,10 @@ def generate_int(n, idx=1):
         while (thasil * t2) < n:
             thasil *= t2
     else:
-        while (thasil << t2) < n:
+        while (thasil << t2) <= n:
             thasil <<= t2
+    if thasil*t2 <= n:
+        thasil *= t2
     sisa = n - eval(thasil.nilai)
     thasil += generate_int(sisa, idx)
     if m == 1:
@@ -178,6 +180,7 @@ def clean(s):
 
 def main(s):
     print(clean(make_str(s)))
+    #print clean(generate_int(int(s)))
 
 if __name__ == '__main__':
     if len(sys.argv) <= 1:
