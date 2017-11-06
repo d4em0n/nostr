@@ -1,5 +1,7 @@
+#!/usr/bin/python
+
 import sys
-import re
+import argparse
 
 class BNilai:
     nilai = ''
@@ -9,10 +11,16 @@ class BNilai:
 
     def operasi(self, op, other):
         if isinstance(other, str):
-            other = '('+other+')'
-            h = '('+self.nilai+op+other+')'
+            if eval(other) == 0:
+                h = self.nilai
+            else:
+                other = '('+other+')'
+                h = '('+self.nilai+op+other+')'
         elif isinstance(other, BNilai):
-            h = '('+self.nilai+op+other.nilai+')'
+            if eval(other.nilai) == 0:
+                h = self.nilai
+            else:
+                h = '('+self.nilai+op+other.nilai+')'
         else:
             raise ValueError("Data Type Not Supported")
         return BNilai(h)
@@ -112,16 +120,13 @@ def find_near(n, t):   # Mencari angka terdekat dari n yang mempunyai kelipatan 
     hasil = min(coba, key=lambda x:abs(x-n))
     return hasil
 
-def avg(lst):
-    return sum([ord(i) for i in lst]) / len(lst)
-
-def generate_int(n, idx=1):
+def generate_int(n):
     if sys.version_info < (3,0):
-        t0 = BNilai(['{}>[]','[]>[[]]','(()!=())'][idx])
-        t1 = BNilai(['[[]]>=[]','[]<=[{}]', '()>[]'][idx])
+        t0 = BNilai('{}>[]')
+        t1 = BNilai('()>[]')
     else:
-        t0 = BNilai(['[]!=[]', '[]>[[]]','()==[]'][idx])
-        t1 = BNilai(['[[]]>=[]', '()!=[]', '(()==())'][idx])
+        t0 = BNilai('[]!=[]')
+        t1 = BNilai('()==()')
     t2 = t1*2
     thasil = t2
     m = 0
@@ -147,20 +152,18 @@ def generate_int(n, idx=1):
     if thasil*t2 <= n:
         thasil *= t2
     sisa = n - eval(thasil.nilai)
-    thasil += generate_int(sisa, idx)
+    thasil += generate_int(sisa)
     if m == 1:
         thasil = t0 - thasil
     return thasil.nilai
 
 def make_str(s='Hello world!'):
-    awal = "('c%'[::"+generate_int(-1)+"])*"+generate_int(len(s))+'%'
+    hasil = "('c%'[::"+generate_int(-1)+"])*"+generate_int(len(s))+'%'
     isi = []
     for char in [ord(i) for i in s]:
        isi += [generate_int(char)] 
-    awal += '('
-    awal += ','.join(isi)
-    awal += ')'
-    return awal
+    hasil += '(' + ','.join(isi) + ')'
+    return hasil
 
 def clean(s):
     left = []
@@ -178,12 +181,34 @@ def clean(s):
             s[lr[i][1]] = ''
     return ''.join(s)
 
-def main(s):
-    print(clean(make_str(s)))
-    #print clean(generate_int(int(s)))
+def mk_var(s, v='___'):
+    hasil = ""
+    vari = {}
+    vari['_'] = clean(generate_int(2))
+    vari['__'] = clean(generate_int(64)).replace(vari['_'], '_')
+    vari[v] = clean(make_str(s)).replace(vari['_'], '_')
+    vari[v] = vari[v].replace(vari['__'], '__')
+    hasil += '_={s}\n'.format(s=vari['_'])
+    hasil += '__={s}\n'.format(s=vari['__'])
+    hasil += '{v}={s}'.format(v=v,s=vari[v])
+    return hasil
+
+def main(strn, var, nl):
+    obf = mk_var(strn, var)
+    if nl == False:
+        obf = obf.replace("\n", ";")
+    print obf
 
 if __name__ == '__main__':
-    if len(sys.argv) <= 1:
-        print('Usage : {0} <str>'.format(sys.argv[0]))
-        sys.exit(1)
-    main(sys.argv[1])
+    parser = argparse.ArgumentParser()
+    parser.add_argument("str", 
+            help="string to obfuscate")
+    parser.add_argument("-v", "--var", 
+            help="variable name for obfuscated string, default is '___'", 
+            action="store", 
+            default='___')
+    parser.add_argument("-nl", "--newline",
+            help="Add newline instead of ';'",
+            action="store_true")
+    args = parser.parse_args()
+    main(args.str, args.var, args.newline)
